@@ -12,6 +12,13 @@ find_package(${QT_VERSION} REQUIRED COMPONENTS Core Widgets)
 
 include_directories(.)
 
+file (
+    GLOB_RECURSE LOG_SOURCE
+    CONFIGURE_DEPENDS
+    "log/*.cc"
+    "log/*.hh"
+)
+
 file(
     GLOB_RECURSE PROJECT_SOURCE
     CONFIGURE_DEPENDS
@@ -19,7 +26,11 @@ file(
     "./*.hh"
 )
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCE})
+add_executable(
+    ${PROJECT_NAME}
+    ${PROJECT_SOURCE}
+    ${LOG_SOURCE}
+)
 
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE
