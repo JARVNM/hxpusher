@@ -9,9 +9,11 @@ enum RTMPChannel {
     RTMP_VIDEO_CHANNEL = 6,
     RTMP_SOURCE_CHANNEL = 8,
 };
-class RTMPPacket {
+class RTMPPacketer {
 public:
-    virtual void Pack(RTMPPacket *packet, char* buf, const char* data, int length) const = 0;
-    virtual void Metadata(RTMPPacket* packet, char* buf, const char* data, int length) const = 0;
+    virtual void pack(RTMPPacket* packet, char* buf, const char* data,
+                      int length) const = 0;
+    virtual void metadata(RTMPPacket* packet, char* buf, const char* data,
+                          int length) const = 0;
 };
-}
+}  // namespace LQF

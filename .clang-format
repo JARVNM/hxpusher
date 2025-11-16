@@ -1,0 +1,7 @@
+# .clang-format
+BasedOnStyle: Google        # 或 Google / Chromium / Mozilla / Microsoft 等
+IndentWidth: 4            # 缩进宽度 = 4 空格
+TabWidth: 4               # 一个 Tab 等价 4 空格（如果你还在用 Tab）
+UseTab: Never             # 永远不用真实 Tab，只用空格
+Language: Cpp             # 如果是放在单独的配置块里要指定语言
+AccessModifierOffset: -4
