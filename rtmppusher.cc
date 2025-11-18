@@ -10,6 +10,7 @@
 #include "avpublishtime.hh"
 #include "log/easylogging++.h"
 #include "mediabase.hh"
+#include "rtmppackager.hh"
 #include "timeutil.hh"
 
 namespace LQF {
@@ -228,5 +229,95 @@ bool RTMPPusher::send_h264_sequence_header(VideoSequenceHeaderMsg* seq_header) {
 
     memcpy(&body[i], seq_header->pps_, seq_header->pps_size_);
     i = i + seq_header->pps_size_;
+    time_ = TimesUtil::get_time_millisecond();
+
+    return send_packet(RTMP_PACKET_TYPE_VIDEO, (unsigned char*)body, i, 0);
+}
+
+bool RTMPPusher::send_audio_specific_config(char* data, int length) {
+    if (data == NULL) {
+        return false;
+    }
+    RTMPPacket packet;
+    RTMPPacket_Reset(&packet);
+    RTMPPacket_Alloc(&packet, 4);
+    packet.m_body[0] = data[0];
+    packet.m_body[1] = data[1];
+    packet.m_body[2] = data[2];
+    packet.m_body[3] = data[3];
+    packet.m_headerType = RTMP_PACKET_SIZE_LARGE;
+    packet.m_packetType = RTMP_PACKET_TYPE_AUDIO;
+    packet.m_nChannel = RTMP_AUDIO_CHANNEL;
+    packet.m_nTimeStamp = 0;
+    packet.m_nInfoField2 = rtmp_->m_stream_id;
+    packet.m_nBodySize = 4;
+    int nRet = RTMP_SendPacket(rtmp_, &packet, 0);
+    if (nRet != true) {
+
+    }
+    RTMPPacket_Free(&packet);
+    return (nRet == true ? true : false);
+}
+
+bool RTMPPusher::send_h264_packet(char* data, int size, bool is_keyframe,
+                          unsigned int timestamp) {
+    if (data == NULL && size < 11) {
+        return false;
+    }
+
+    unsigned char* body = new unsigned char[size + 9];
+    int i = 0;
+    if (is_keyframe) {
+        body[i++] = 0x17; // I frame
+    }
+    else {
+        body[i++] = 0x27; // P frame
+    }
+    body[i++] = 0x01;
+    body[i++] = 0x00;
+    body[i++] = 0x00;
+    body[i++] = 0x00;
+    body[i++] = size >> 24;
+    body[i++] = size >> 16;
+    body[i++] = size >> 8;
+    body[i++] = size & 0xFF;
+    memcpy(&body[i], data, size);
+    bool bRet = send_packet(RTMP_PACKET_TYPE_VIDEO, body, i + size, timestamp);
+    delete [] body;
+    return bRet;
+}
+
+int RTMPPusher::send_packet(unsigned int packet_type, unsigned char* data,
+                    unsigned int size, unsigned int timestamp) {
+    if (rtmp_ == NULL) {
+        return false;
+    }
+
+    RTMPPacket packet;
+    RTMPPacket_Reset(&packet);
+    RTMPPacket_Alloc(&packet, size);
+    packet.m_packetType = packet_type;
+    if (packet_type == RTMP_PACKET_TYPE_AUDIO) {
+        audio_pre_timestamp = timestamp;
+    }
+    else if (packet_type == RTMP_PACKET_TYPE_VIDEO) {
+        packet.m_nChannel = RTMP_VIDEO_CHANNEL;
+        video_pre_timestamp = timestamp;
+    }
+    else {}
+
+    packet.m_nChannel = RTMP_AUDIO_CHANNEL;// 这里参考obs，音频、视频使用同样的channel
+    packet.m_headerType = RTMP_PACKET_SIZE_LARGE;
+    packet.m_nTimeStamp = timestamp;
+    packet.m_nInfoField2 = rtmp_->m_stream_id;
+    packet.m_nBodySize = size;
+    memcpy(packet.m_body, data, size);
+    int nRet = RTMP_SendPacket(rtmp_, &packet, 0);
+    if (nRet != 1) {
+
+    }
+    RTMPPacket_Free(&packet);
+    return nRet;
+
 }
 }  // namespace LQF

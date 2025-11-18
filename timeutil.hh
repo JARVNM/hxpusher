@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HXPUSHER_TIMEUTIL_HH
+#define HXPUSHER_TIMEUTIL_HH
 
 #include <bits/types/struct_timeval.h>
 #include <chrono>
@@ -21,5 +22,7 @@ public:
         gettimeofday(&tv, NULL);
         return ((int64_t)tv.tv_sec * 1000 + (unsigned long long)tv.tv_usec / 1000);
     }
+};
 }
-}
+
+#endif

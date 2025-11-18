@@ -38,7 +38,7 @@ public:
 
     bool send_meta_data(FLVMetadataMsg* metadata);
 
-    bool send_audio_specificConfig(char* data, int length);
+    bool send_audio_specific_config(char* data, int length);
 
 private:
     virtual void handle(int what, void* data);
